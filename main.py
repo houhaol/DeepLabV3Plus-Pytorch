@@ -7,7 +7,7 @@ import argparse
 import numpy as np
 
 from torch.utils import data
-from datasets import VOCSegmentation, Cityscapes
+from datasets import VOCSegmentation, Cityscapes, CustomCityscapes
 from utils import ext_transforms as et
 from metrics import StreamSegMetrics
 
@@ -27,7 +27,7 @@ def get_argparser():
     parser.add_argument("--data_root", type=str, default='./datasets/data',
                         help="path to Dataset")
     parser.add_argument("--dataset", type=str, default='voc',
-                        choices=['voc', 'cityscapes'], help='Name of dataset')
+                        choices=['voc', 'cityscapes', 'custom'], help='Name of dataset')
     parser.add_argument("--num_classes", type=int, default=None,
                         help="num classes (default: None)")
 
@@ -150,6 +150,31 @@ def get_dataset(opts):
                                split='train', transform=train_transform)
         val_dst = Cityscapes(root=opts.data_root,
                              split='val', transform=val_transform)
+        
+    if opts.dataset == 'custom':
+        train_transform = et.ExtCompose([
+            # et.ExtResize( 512 ),
+            et.ExtRandomCrop(size=(opts.crop_size, opts.crop_size)),
+            et.ExtColorJitter(brightness=0.5, contrast=0.5, saturation=0.5),
+            et.ExtRandomHorizontalFlip(),
+            et.ExtToTensor(),
+            et.ExtNormalize(mean=[0.485, 0.456, 0.406],
+                            std=[0.229, 0.224, 0.225]),
+        ])
+
+        val_transform = et.ExtCompose([
+            # et.ExtResize( 512 ),
+            et.ExtToTensor(),
+            et.ExtNormalize(mean=[0.485, 0.456, 0.406],
+                            std=[0.229, 0.224, 0.225]),
+        ])
+
+        train_dst = CustomCityscapes(root=opts.data_root,
+                            split='train', transform=train_transform)
+        val_dst = CustomCityscapes(root=opts.data_root,
+                            split='val', transform=val_transform)
+        
+
     return train_dst, val_dst
 
 
@@ -214,6 +239,9 @@ def main():
         opts.num_classes = 21
     elif opts.dataset.lower() == 'cityscapes':
         opts.num_classes = 19
+    elif opts.dataset.lower() == 'custom':
+        opts.num_classes = 20
+        
 
     # Setup visualization
     vis = Visualizer(port=opts.vis_port,
@@ -248,6 +276,20 @@ def main():
     if opts.separable_conv and 'plus' in opts.model:
         network.convert_to_separable_conv(model.classifier)
     utils.set_bn_momentum(model.backbone, momentum=0.01)
+
+    # Load pre-trained weights
+    pretrained_weights = torch.load('./checkpoints/best_deeplabv3plus_mobilenet_cityscapes_os16.pth', map_location=device, weights_only=False)
+    model.load_state_dict(pretrained_weights, strict=False)  # strict=False to allow missing keys
+
+    # import pdb
+    # pdb.set_trace()
+    # Modify the final classifier layer to match the number of classes
+    # in_channels = model.classifier[4].in_channels  # Number of input channels to the final classifier
+    # model.classifier[4] = nn.Conv2d(in_channels, opts.num_classes, kernel_size=1)
+
+    # Optionally, freeze the backbone (if you don't want to fine-tune it)
+    for param in model.backbone.parameters():
+        param.requires_grad = False
 
     # Set up metrics
     metrics = StreamSegMetrics(opts.num_classes)
