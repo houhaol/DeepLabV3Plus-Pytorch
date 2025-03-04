@@ -51,6 +51,10 @@ Image folder:
 python predict.py --input datasets/data/cityscapes/leftImg8bit/train/bremen  --dataset cityscapes --model deeplabv3plus_mobilenet --ckpt checkpoints/best_deeplabv3plus_mobilenet_cityscapes_os16.pth --save_val_results_to test_results
 ```
 
+```bash
+python predict.py --input ~/Downloads/cityscapes_format/sgTest/  --dataset custom --model deeplabv3plus_mobilenet --ckpt checkpoints/best_deeplabv3plus_mobilenet_custom_os16.pth --save_val_results_to test_results/sgTest
+```
+
 ### 6. New backbones
 
 Please refer to [this commit (Xception)](https://github.com/VainF/DeepLabV3Plus-Pytorch/commit/c4b51e435e32b0deba5fc7c8ff106293df90590d) for more details about how to add new backbones.
@@ -241,6 +245,8 @@ python main.py --model deeplabv3plus_mobilenet --enable_vis --vis_port 28333 --g
 
 ```bash
 python main.py --model deeplabv3plus_mobilenet --dataset cityscapes --enable_vis --vis_port 28333 --gpu_id 0  --lr 0.1  --crop_size 768 --batch_size 16 --output_stride 16 --data_root ./datasets/data/cityscapes 
+python main.py --model deeplabv3plus_mobilenet --dataset custom --enable_vis --vis_port 28333 --gpu_id 0  --lr 0.1  --crop_size 768 --batch_size 16 --output_stride 16 --data_root ~/Downloads/cityscapes_format
+python main.py --model deeplabv3plus_resnet101 --dataset custom --enable_vis --vis_port 28333 --gpu_id 0  --lr 0.1  --crop_size 1024 --batch_size 4 --output_stride 16 --data_root ~/Downloads/cityscapes_format --pretrained_model ./checkpoints/best_deeplabv3plus_resnet101_cityscapes_os16.pth.tar --ckpt ./checkpoints/latest_deeplabv3plus_resnet101_custom_os16.pth
 ```
 
 ## Reference

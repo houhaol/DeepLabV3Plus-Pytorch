@@ -37,7 +37,9 @@ def get_argparser():
                               network.modeling.__dict__[name])
                               )
     parser.add_argument("--model", type=str, default='deeplabv3plus_mobilenet',
-                        choices=available_models, help='model name')
+                        choices=available_models, help='model name, deeplabv3plus_resnet101')
+    parser.add_argument("--pretrained_model", type=str, default='./checkpoints/best_deeplabv3plus_mobilenet_cityscapes_os16.pth',
+                        help='apply transfer learning')
     parser.add_argument("--separable_conv", action='store_true', default=False,
                         help="apply separable conv to decoder and aspp")
     parser.add_argument("--output_stride", type=int, default=16, choices=[8, 16])
@@ -278,7 +280,7 @@ def main():
     utils.set_bn_momentum(model.backbone, momentum=0.01)
 
     # Load pre-trained weights
-    pretrained_weights = torch.load('./checkpoints/best_deeplabv3plus_mobilenet_cityscapes_os16.pth', map_location=device, weights_only=False)
+    pretrained_weights = torch.load(opts.pretrained_model, map_location=device, weights_only=False)
     model.load_state_dict(pretrained_weights, strict=False)  # strict=False to allow missing keys
 
     # import pdb
@@ -287,9 +289,9 @@ def main():
     # in_channels = model.classifier[4].in_channels  # Number of input channels to the final classifier
     # model.classifier[4] = nn.Conv2d(in_channels, opts.num_classes, kernel_size=1)
 
-    # Optionally, freeze the backbone (if you don't want to fine-tune it)
-    for param in model.backbone.parameters():
-        param.requires_grad = False
+    # # Optionally, freeze the backbone (if you don't want to fine-tune it)
+    # for param in model.backbone.parameters():
+    #     param.requires_grad = False
 
     # Set up metrics
     metrics = StreamSegMetrics(opts.num_classes)
@@ -332,7 +334,7 @@ def main():
     cur_epochs = 0
     if opts.ckpt is not None and os.path.isfile(opts.ckpt):
         # https://github.com/VainF/DeepLabV3Plus-Pytorch/issues/8#issuecomment-605601402, @PytaichukBohdan
-        checkpoint = torch.load(opts.ckpt, map_location=torch.device('cpu'))
+        checkpoint = torch.load(opts.ckpt, map_location=torch.device('cpu'), weights_only=False)
         model.load_state_dict(checkpoint["model_state"])
         model = nn.DataParallel(model)
         model.to(device)
