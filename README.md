@@ -52,7 +52,10 @@ python predict.py --input datasets/data/cityscapes/leftImg8bit/train/bremen  --d
 ```
 
 ```bash
-python predict.py --input ~/Downloads/cityscapes_format/sgTest/  --dataset custom --model deeplabv3plus_mobilenet --ckpt checkpoints/best_deeplabv3plus_mobilenet_custom_os16.pth --save_val_results_to test_results/sgTest
+python predict.py --input ~/Downloads/cityscapes_format/leftImg8bit/sgTest/test/  --dataset custom --model deeplabv3plus_mobilenet --ckpt checkpoints/best_deeplabv3plus_mobilenet_custom_os16.pth --save_val_results_to test_results/sgTest
+
+python predict.py --input ~/Downloads/cityscapes_format/leftImg8bit/sgTest/test/  --dataset custom --model deeplabv3plus_resnet101 --ckpt checkpoints/best_deeplabv3plus_resnet101_custom_os16.pth --save_val_results_to test_results/sgTest_resnet101
+
 ```
 
 ### 6. New backbones

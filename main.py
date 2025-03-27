@@ -280,8 +280,9 @@ def main():
     utils.set_bn_momentum(model.backbone, momentum=0.01)
 
     # Load pre-trained weights
-    pretrained_weights = torch.load(opts.pretrained_model, map_location=device, weights_only=False)
-    model.load_state_dict(pretrained_weights, strict=False)  # strict=False to allow missing keys
+    if opts.pretrained_model is not None:
+        pretrained_weights = torch.load(opts.pretrained_model, map_location=device, weights_only=False)
+        model.load_state_dict(pretrained_weights, strict=False)  # strict=False to allow missing keys
 
     # import pdb
     # pdb.set_trace()
